@@ -1,0 +1,232 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id])
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Teacher specific
+  teacherProfile TeacherProfile?
+  
+  // School admin specific
+  adminProfile   AdminProfile?
+  
+  // Vendor specific
+  vendorProfile  VendorProfile?
+
+  @@map("users")
+}
+
+model School {
+  id                String   @id @default(cuid())
+  name              String
+  institutionCode   String   @unique
+  address           String
+  city              String
+  district          String
+  phone             String?
+  email             String?
+  temporaryPassword String?
+  isActive          Boolean  @default(true)
+  licenseEnd        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  users       User[]
+  students    Student[]
+  companies   Company[]
+  licenses    License[]
+
+  @@map("schools")
+}
+
+model TeacherProfile {
+  id       String @id @default(cuid())
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id])
+  branch   String
+  phone    String?
+  
+  students Student[]
+  visits   Visit[]
+  forms    CoordinationForm[]
+
+  @@map("teacher_profiles")
+}
+
+model AdminProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  title  String
+
+  @@map("admin_profiles")
+}
+
+model VendorProfile {
+  id       String @id @default(cuid())
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id])
+  company  String
+  phone    String?
+
+  @@map("vendor_profiles")
+}
+
+model VendorUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  company   String
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("vendor_users")
+}
+
+model Student {
+  id          String   @id @default(cuid())
+  number      String
+  name        String
+  email       String?
+  phone       String?
+  class       String
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id])
+  teacherId   String?
+  teacher     TeacherProfile? @relation(fields: [teacherId], references: [id])
+  companyId   String?
+  company     Company? @relation(fields: [companyId], references: [id])
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attendances Attendance[]
+  visits      Visit[]
+
+  @@map("students")
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  sector    String
+  address   String
+  city      String
+  phone     String?
+  email     String?
+  contact   String?
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  students Student[]
+  visits   Visit[]
+
+  @@map("companies")
+}
+
+model Visit {
+  id          String   @id @default(cuid())
+  date        DateTime
+  time        String
+  teacherId   String
+  teacher     TeacherProfile @relation(fields: [teacherId], references: [id])
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id])
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  status      VisitStatus @default(PLANNED)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("visits")
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  date      DateTime
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  status    AttendanceStatus
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@unique([date, studentId])
+  @@map("attendances")
+}
+
+model CoordinationForm {
+  id          String   @id @default(cuid())
+  title       String
+  date        DateTime
+  teacherId   String
+  teacher     TeacherProfile @relation(fields: [teacherId], references: [id])
+  content     Json
+  status      FormStatus @default(DRAFT)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("coordination_forms")
+}
+
+model License {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  startDate DateTime
+  endDate   DateTime
+  userLimit Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("licenses")
+}
+
+enum Role {
+  TEACHER
+  SCHOOL_ADMIN
+  VENDOR
+}
+
+enum VisitStatus {
+  PLANNED
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum FormStatus {
+  DRAFT
+  COMPLETED
+  SUBMITTED
+  APPROVED
+}
