@@ -1,23 +1,15 @@
 {
-  "name": "imekolayv2",
   "version": 2,
-  "builds": [
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "dist",
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/server/index.js"
+      "source": "/api/(.*)",
+      "destination": "/server/index.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "functions": {
