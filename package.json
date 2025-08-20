@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "dev:server": "node server/index.js",
-    "build": "vite build",
+    "build": "prisma generate && vite build",
+    "vercel-build": "prisma generate && vite build",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -13,7 +14,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node server/index.js",
-    "start": "node dist/index.js"
+    "start": "node server/index.js"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",
